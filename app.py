@@ -39,7 +39,7 @@ def get_user_by_id(id):
 def add_user():
     data = request.json
 
-    # Validation
+    # Validation (task 5)
     if not data:
         return jsonify({"error": "JSON body required"}), 400
 
@@ -47,7 +47,7 @@ def add_user():
         return jsonify({"error": "Name cannot be empty"}), 400
 
     if not data.get("email"):
-        return jsonify({"error": "Email is required"}), 400
+        return jsonify({"error": "Email is required"}), 400 #(task 5 completed)
 
     new_user = {
         "id": len(users) + 1,
@@ -64,3 +64,4 @@ def add_user():
 
 if __name__ == "__main__":  # Runs server only if file is main
     app.run(debug=True)
+
