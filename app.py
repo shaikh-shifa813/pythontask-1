@@ -1,67 +1,96 @@
-from flask import Flask, request, jsonify  # Flask-creates the app, jsonify-converts Python dict to JSON
+from flask import request, jsonify
+from config import app, db
+from models import Activity
 
-app = Flask(__name__)  # __name__ helps Flask know where the app is running
+# Create tables (first time only)
+with app.app_context():
+    db.create_all()
 
-# Mock users data
-users = [
-    {"id": 1, "name": "Ayaan"},
-    {"id": 2, "name": "Sara"}
-]
+# 1. Create Activity
+@app.route('/activity', methods=['POST'])
+def create_activity():
+    data = request.get_json()
+    if not data or not data.get('name'):
+        return jsonify({'error': 'Activity name is required'}), 400
 
-@app.route('/')  # when someone visits /
-def home():  # function runs
-    return jsonify({  # returns JSON response
-        "message": "API is working"
-    })
+    new_activity = Activity(
+        name=data['name'],
+        description=data.get('description')
+    )
 
-# GET API - Users List(task 2)
-@app.route('/users', methods=['GET'])
-def get_users():
-    return jsonify({
-        "status": "success",
-        "count": len(users),
-        "data": users
-    })
-
-# GET API - User by ID (Task 3)
-@app.route('/users/<int:id>', methods=['GET'])
-def get_user_by_id(id):
-    for user in users:
-        if user["id"] == id:
-            return jsonify(user), 200
+    db.session.add(new_activity)
+    db.session.commit()
 
     return jsonify({
-        "error": "User not found"
-    }), 404
-
-# POST API - Add User (Task 4)
-@app.route('/users', methods=['POST'])
-def add_user():
-    data = request.json
-
-    # Validation (task 5)
-    if not data:
-        return jsonify({"error": "JSON body required"}), 400
-
-    if not data.get("name"):
-        return jsonify({"error": "Name cannot be empty"}), 400
-
-    if not data.get("email"):
-        return jsonify({"error": "Email is required"}), 400 #(task 5 completed)
-
-    new_user = {
-        "id": len(users) + 1,
-        "name": data["name"],
-        "email": data["email"]
-    }
-
-    users.append(new_user)
-
-    return jsonify({
-        "message": "User added successfully",
-        "user": new_user
+        'id': new_activity.id,
+        'name': new_activity.name,
+        'description': new_activity.description
     }), 201
 
-if __name__ == "__main__":  # Runs server only if file is main
-    app.run(debug=True)
+#2. Get All Activities
+@app.route('/activity', methods=['GET'])
+def get_all_activities():
+    activities = Activity.query.all()
+    result = []
 
+    for activity in activities:
+        result.append({
+            'id': activity.id,
+            'name': activity.name,
+            'description':activity.description
+        })
+    return jsonify(result),200
+
+#3. Get activity by ID
+@app.route('/activity/<int:id>', methods=['GET'])
+def get_activity_by_id(id):
+    activity = Activity.query.get(id)   
+
+    if not activity:
+        return jsonify({'error': 'Activity not found'}), 404
+
+    return jsonify({
+        'id': activity.id,
+        'name': activity.name,
+        'description': activity.description
+    }), 200
+
+#4. Update Activity
+@app.route('/activity/<int:id>', methods=['PUT'])
+def update_activity(id):
+    activity = Activity.query.get(id)
+
+    if not activity:
+        return jsonify({'error': 'Activity not found'}), 404
+
+    data = request.get_json()
+
+    if 'name' in data:
+        activity.name = data['name']
+    if 'description' in data:
+        activity.description = data['description']
+
+    db.session.commit()
+    return jsonify({
+        'id': activity.id,
+        'name': activity.name,
+        'description': activity.description
+    }), 200
+
+# 5️⃣ Delete Activity
+@app.route('/activity/<int:id>', methods=['DELETE'])
+def delete_activity(id):
+    activity = Activity.query.get(id)
+
+    if not activity:
+        return jsonify({'error': 'Activity not found'}), 404
+
+    db.session.delete(activity)
+    db.session.commit()
+
+    return jsonify({'message': 'Activity deleted successfully'}), 200
+
+
+
+if __name__ == '__main__':
+    app.run(debug=True)
