@@ -1,3 +1,4 @@
+#Imports the SQLAlchemy database object
 from config import db
 
 class Activity(db.Model):
@@ -7,3 +8,4 @@ class Activity(db.Model):
 
     def __repr__(self):
         return f"<Activity {self.name}>"
+
