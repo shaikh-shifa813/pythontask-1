@@ -77,7 +77,7 @@ def update_activity(id):
         'description': activity.description
     }), 200
 
-# 5️⃣ Delete Activity
+#5.Delete Activity
 @app.route('/activity/<int:id>', methods=['DELETE'])
 def delete_activity(id):
     activity = Activity.query.get(id)
@@ -94,3 +94,4 @@ def delete_activity(id):
 
 if __name__ == '__main__':
     app.run(debug=True)
+
